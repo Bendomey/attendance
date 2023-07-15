@@ -44,8 +44,3 @@ variable "vpc_subnetwork_region" {
     type        = string
     default     = "us-west1"
 }
-
-variable "ssh_key_path" {
-    description = "The path to the SSH key to use for the VM"
-    type        = string
-}
