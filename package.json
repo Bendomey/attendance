@@ -1,0 +1,24 @@
+{
+  "name": "gnpc",
+  "version": "1.0.0",
+  "description": "Attendance Management system",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon .",
+    "start": "node .",
+    "seed": "node migrations/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "2.8.5",
+    "express": "4.18.2",
+    "fastest-validator": "1.17.0",
+    "mongoose": "7.3.4",
+    "nanoid": "3.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "3.0.1"
+  }
+}
