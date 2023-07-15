@@ -1,0 +1,22 @@
+
+# Project
+repository: https://github.com/Bendomey/attendance.git
+
+node_version: 16.15.0
+node_env: production
+node_port: 5001
+app_name: attendance
+
+temp_folder: /tmp
+
+# UFW
+ufw_allow_ports:
+  - 22
+  - 80
+  - 443
+
+# SSH
+ssh_port: 22
+
+# User
+ssh_pub_key: "{{ lookup('file', '~/.ssh/google_compute_engine.pub') }}"

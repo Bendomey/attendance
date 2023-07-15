@@ -1,0 +1,30 @@
+---
+
+- name: Clone repository
+  git:
+    repo: "{{ repository }}"
+    dest: "/home/${{ ansible_env.SUDO_USER }}/attendance"
+    update: yes
+  ignore_errors: true
+
+- name: Install dependencies
+  shell: npm install
+  args:
+    executable: /bin/bash
+    chdir: "/home/${{ ansible_env.SUDO_USER }}/attendance"
+  register: npm_finished
+
+- name: Stop app
+  shell: pm2 stop "attendance"
+  args:
+    executable: /bin/bash
+    chdir: "/home/${{ ansible_env.SUDO_USER }}/attendance"
+  ignore_errors: true
+  when: npm_finished.changed
+
+- name: Start app
+  shell: pm2 start index.js --name "{{ app_name }}"
+  args:
+    executable: /bin/bash
+    chdir: "/home/${{ ansible_env.SUDO_USER }}/attendance"
+  when: npm_finished.changed

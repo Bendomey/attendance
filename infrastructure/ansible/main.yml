@@ -1,0 +1,29 @@
+---
+
+- name: Initial Configuration
+  hosts: web-servers
+  become: yes
+  vars_files:
+    - ./defaults/vars.yml
+
+  handlers:
+    - import_tasks: ./handlers/main.yml
+
+  tasks:
+    - name: debug
+      debug:
+        msg: "{{ansible_env}}"
+    - import_tasks: ./tasks/nginx.yml
+    - import_tasks: ./tasks/node.yml
+
+- name: Deployment
+  hosts: web-servers
+  become: yes
+  vars_files:
+    - ./defaults/vars.yml
+
+  handlers:
+  - import_tasks: ./handlers/main.yml
+
+  tasks:
+    - import_tasks: ./tasks/project.yml
