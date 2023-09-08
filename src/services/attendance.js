@@ -92,3 +92,9 @@ exports.clockOut = async function ({
 
   return true;
 };
+
+exports.getAttendances = async function () {
+  const allAttendances =  await AttendanceModel.find().populate({path: 'staff', select: '-password'}).populate('project').exec();
+
+  return allAttendances
+}

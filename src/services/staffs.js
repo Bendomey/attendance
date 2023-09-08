@@ -1,8 +1,9 @@
 const { CONFIG } = require('../../config');
 const { StaffModel } = require('../db/models/staff.model');
 const { AttendanceModel } = require('../db/models/attendance.model');
-const { comparePassword } = require('../utils/hashPassword');
+const { comparePassword, hashPassword } = require('../utils/hashPassword');
 const { generateToken } = require('../utils/jwt-token');
+const { customAlphabet } = require('nanoid');
 
 exports.ping = function () {
   return 'Staff Service All Green!';
@@ -55,7 +56,7 @@ exports.getStaffByClockInCode = async function ({ code }) {
   // find attendance by record
   const attendance = await AttendanceModel.findOne({
     clockoutCode: code,
-    clockoutTime: null
+    clockoutTime: null,
   });
 
   if (!attendance) {
@@ -71,7 +72,6 @@ exports.getStaffByClockInCode = async function ({ code }) {
 
   delete staffInDB.password;
 
-
   const token = generateToken(
     {
       username: staffInDB.username,
@@ -85,3 +85,39 @@ exports.getStaffByClockInCode = async function ({ code }) {
     token,
   };
 };
+
+exports.createStaff = async function ({ email, username, name, department }) {
+  // find user by username
+  const staffInDB = await StaffModel.findOne({
+    $or: [{ username: username }, { email: email }],
+  }).lean();
+
+  if (staffInDB) {
+    throw new Error('Staff already exists with this information');
+  }
+
+  const newPassword = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz')(
+    10
+  );
+
+  console.log("newPassword: ", newPassword)
+
+  const newStaff = new StaffModel({
+    username,
+    email,
+    name,
+    department,
+    password: hashPassword(newPassword),
+  });
+
+  await newStaff.save();
+  // TODO: Send email to staff with password
+
+  return {...newStaff._doc, password: undefined};
+};
+
+exports.getStaffs = async function () {
+  const allStaffs =  await StaffModel.find().lean();
+
+  return allStaffs.map(staff => ({...staff, password: undefined}))
+}

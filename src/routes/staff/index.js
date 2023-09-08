@@ -1,7 +1,17 @@
 const express = require('express');
-const { ping, getStaff, loginStaff, getStaffByClockInCode} = require('../../services/staffs');
+const {
+  ping,
+  getStaff,
+  loginStaff,
+  getStaffByClockInCode,
+  getStaffs,
+  createStaff,
+} = require('../../services/staffs');
 const Validator = require('fastest-validator');
-const { staffAuthMiddleware } = require('../../utils/middlewares');
+const {
+  staffAuthMiddleware,
+  adminAuthMiddleware,
+} = require('../../utils/middlewares');
 const { CONFIG } = require('../../../config');
 
 const v = new Validator();
@@ -27,6 +37,58 @@ staffRouter.get('/ping', (_, res) => {
     status: true,
     message: response,
   });
+});
+
+// get all staffs
+staffRouter.get('/', adminAuthMiddleware, async (_, res) => {
+  try {
+    const response = await getStaffs();
+    res.status(200).json({
+      status: true,
+      message: response,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({
+        status: false,
+        error: error.message,
+      });
+    }
+  }
+});
+
+const validateStaffCreationSchema = {
+  email: { type: 'email', trim: true },
+  username: { type: 'string', trim: true },
+  name: { type: 'string', trim: true },
+  department: { type: 'string', trim: true },
+};
+const checkStaffCreationValidation = v.compile(validateStaffCreationSchema);
+
+// create staff
+staffRouter.post('/', adminAuthMiddleware, async (req, res) => {
+  const validationResult = checkStaffCreationValidation(req.body);
+  if (validationResult !== true) {
+    return res.status(400).json({
+      status: false,
+      error: validationResult,
+    });
+  }
+
+  try {
+    const response = await createStaff(req.body);
+    res.status(200).json({
+      status: true,
+      message: response,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({
+        status: false,
+        error: error.message,
+      });
+    }
+  }
 });
 
 // Get logged in staff
@@ -79,7 +141,6 @@ staffRouter.post('/login', async (req, res) => {
   }
 });
 
-
 const validateStaffLoginWithCodeSchema = {
   code: {
     type: 'string',
@@ -87,7 +148,9 @@ const validateStaffLoginWithCodeSchema = {
     max: CONFIG.VERFICATION_CODE.LENGTH,
   },
 };
-const checkStaffLoginWithCodeValidation = v.compile(validateStaffLoginWithCodeSchema);
+const checkStaffLoginWithCodeValidation = v.compile(
+  validateStaffLoginWithCodeSchema
+);
 
 // Login as staff
 staffRouter.post('/login/code', async (req, res) => {
@@ -114,7 +177,5 @@ staffRouter.post('/login/code', async (req, res) => {
     }
   }
 });
-
-
 
 module.exports = staffRouter;

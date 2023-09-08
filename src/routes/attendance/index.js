@@ -1,8 +1,7 @@
 const express = require('express');
-const { ping, clockIn, clockOut } = require('../../services/attendance');
+const { ping, clockIn, clockOut, getAttendances } = require('../../services/attendance');
 const Validator = require('fastest-validator');
-const { CONFIG } = require('../../../config');
-const { staffAuthMiddleware } = require('../../utils/middlewares');
+const { staffAuthMiddleware, adminAuthMiddleware } = require('../../utils/middlewares');
 const { isValidObjectId } = require('mongoose');
 
 const v = new Validator();
@@ -28,6 +27,24 @@ attendanceRouter.get('/ping', (_, res) => {
     status: true,
     message: response,
   });
+});
+
+// get all attendances
+attendanceRouter.get('/', adminAuthMiddleware, async (_, res) => {
+  try {
+    const response = await getAttendances();
+    res.status(200).json({
+      status: true,
+      message: response,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({
+        status: false,
+        error: error.message,
+      });
+    }
+  }
 });
 
 // Clock In

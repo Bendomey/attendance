@@ -5,12 +5,12 @@ const AttendanceSchema = new mongoose.Schema({
     staff: {
         type: mongoose.SchemaTypes.ObjectId,
         required: true,
-        model: 'Staff'
+        ref: 'Staff'
     },
     project: {
         type: mongoose.SchemaTypes.ObjectId,
         required: true,
-        model: 'Project'
+        ref: 'Project'
     },
     clockInTime: {
         type: mongoose.SchemaTypes.Date,
