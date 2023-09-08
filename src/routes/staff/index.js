@@ -1,6 +1,8 @@
 const express = require('express');
-const { ping, getStaff } = require('../../services/staffs');
+const { ping, getStaff, loginStaff, getStaffByClockInCode} = require('../../services/staffs');
 const Validator = require('fastest-validator');
+const { staffAuthMiddleware } = require('../../utils/middlewares');
+const { CONFIG } = require('../../../config');
 
 const v = new Validator();
 
@@ -18,7 +20,7 @@ const staffRouter = express.Router({
  * 2. Call all your services for a registered route
  */
 
-staffRouter.get('/', (_, res) => {
+staffRouter.get('/ping', (_, res) => {
   const response = ping();
 
   res.status(200).json({
@@ -27,23 +29,10 @@ staffRouter.get('/', (_, res) => {
   });
 });
 
-const validateUsernameSchema = {
-  username: { type: 'string', trim: true },
-};
-const checkUsernameValidation = v.compile(validateUsernameSchema);
-
-// Validate a staff's username
-staffRouter.get('/:username', async (req, res) => {
-  const validationResult = checkUsernameValidation(req.params);
-  if (validationResult !== true) {
-    return res.status(400).json({
-      status: false,
-      error: validationResult,
-    });
-  }
-  
+// Get logged in staff
+staffRouter.get('/current', staffAuthMiddleware, async (req, res) => {
   try {
-    const response = await getStaff(req.params);
+    const response = await getStaff({ username: req.user.username });
     res.status(200).json({
       status: true,
       message: response,
@@ -57,5 +46,75 @@ staffRouter.get('/:username', async (req, res) => {
     }
   }
 });
+
+const validateStaffLoginSchema = {
+  username: { type: 'string', trim: true },
+  password: { type: 'string', trim: true },
+};
+const checkStaffLoginValidation = v.compile(validateStaffLoginSchema);
+
+// Login as staff
+staffRouter.post('/login', async (req, res) => {
+  const validationResult = checkStaffLoginValidation(req.body);
+  if (validationResult !== true) {
+    return res.status(400).json({
+      status: false,
+      error: validationResult,
+    });
+  }
+
+  try {
+    const response = await loginStaff(req.body);
+    res.status(200).json({
+      status: true,
+      message: response,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({
+        status: false,
+        error: error.message,
+      });
+    }
+  }
+});
+
+
+const validateStaffLoginWithCodeSchema = {
+  code: {
+    type: 'string',
+    min: CONFIG.VERFICATION_CODE.LENGTH,
+    max: CONFIG.VERFICATION_CODE.LENGTH,
+  },
+};
+const checkStaffLoginWithCodeValidation = v.compile(validateStaffLoginWithCodeSchema);
+
+// Login as staff
+staffRouter.post('/login/code', async (req, res) => {
+  const validationResult = checkStaffLoginWithCodeValidation(req.body);
+  if (validationResult !== true) {
+    return res.status(400).json({
+      status: false,
+      error: validationResult,
+    });
+  }
+
+  try {
+    const response = await getStaffByClockInCode(req.body);
+    res.status(200).json({
+      status: true,
+      message: response,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({
+        status: false,
+        error: error.message,
+      });
+    }
+  }
+});
+
+
 
 module.exports = staffRouter;

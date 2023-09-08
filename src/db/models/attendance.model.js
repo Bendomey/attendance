@@ -7,6 +7,11 @@ const AttendanceSchema = new mongoose.Schema({
         required: true,
         model: 'Staff'
     },
+    project: {
+        type: mongoose.SchemaTypes.ObjectId,
+        required: true,
+        model: 'Project'
+    },
     clockInTime: {
         type: mongoose.SchemaTypes.Date,
         required: true,
@@ -20,7 +25,19 @@ const AttendanceSchema = new mongoose.Schema({
     },
     briefOfWhatWasDoneForTheDay: {
         type: mongoose.SchemaTypes.String,
-    }
+    },
+    workForToday: {
+        type: mongoose.SchemaTypes.String,
+    },
+    workForTodayStartTime: {
+        type: mongoose.SchemaTypes.String,
+    },
+    workForTodayEndTime: {
+        type: mongoose.SchemaTypes.String,
+    },
+    workHours: {
+        type: mongoose.SchemaTypes.String,
+    },
 }, { timestamps: true })
 
 AttendanceSchema.virtual('status').get(function() {

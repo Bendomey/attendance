@@ -2,6 +2,8 @@ const express = require('express');
 const { ping, clockIn, clockOut } = require('../../services/attendance');
 const Validator = require('fastest-validator');
 const { CONFIG } = require('../../../config');
+const { staffAuthMiddleware } = require('../../utils/middlewares');
+const { isValidObjectId } = require('mongoose');
 
 const v = new Validator();
 
@@ -19,7 +21,7 @@ const attendanceRouter = express.Router({
  * 2. Call all your services for a registered route
  */
 
-attendanceRouter.get('/', (_, res) => {
+attendanceRouter.get('/ping', (_, res) => {
   const response = ping();
 
   res.status(200).json({
@@ -28,25 +30,10 @@ attendanceRouter.get('/', (_, res) => {
   });
 });
 
-const validateUsernameSchema = {
-  username: { type: 'string', trim: true },
-};
-const checkUsernameValidation = v.compile(validateUsernameSchema);
-
 // Clock In
-attendanceRouter.post('/', async (req, res) => {
-  const validationResult = checkUsernameValidation(req.body);
-  if (validationResult !== true) {
-    return res.status(400).json({
-      status: false,
-      error: validationResult,
-    });
-  }
-
+attendanceRouter.post('/', staffAuthMiddleware, async (req, res) => {
   try {
-    const response = await clockIn(req.body);
-    // console.log(response);
-    // return 
+    const response = await clockIn({ username: req.user.username });
     res.status(200).json({
       status: true,
       message: response,
@@ -62,17 +49,17 @@ attendanceRouter.post('/', async (req, res) => {
 });
 
 const validateClockoutSchema = {
-  code: {
-    type: 'string',
-    min: CONFIG.VERFICATION_CODE.LENGTH,
-    max: CONFIG.VERFICATION_CODE.LENGTH,
-  },
   briefOfWhatWasDoneForTheDay: 'string|optional',
+  workForToday: 'string',
+  project: 'string',
+  workForTodayStartTime: 'string',
+  workForTodayEndTime: 'string',
+  workHours: 'string',
 };
 const checkClockoutValidation = v.compile(validateClockoutSchema);
 
 // Clock Out
-attendanceRouter.patch('/', async (req, res) => {
+attendanceRouter.patch('/', staffAuthMiddleware, async (req, res) => {
   const validationResult = checkClockoutValidation(req.body);
   if (validationResult !== true) {
     return res.status(400).json({
@@ -81,8 +68,18 @@ attendanceRouter.patch('/', async (req, res) => {
     });
   }
 
+  if (!isValidObjectId(req.body.project)) {
+    res.status(400).json({
+      status: false,
+      error: 'Provide ID of project',
+    });
+  }
+
   try {
-    const response = await clockOut(req.body);
+    const response = await clockOut({
+      id: req.user.id,
+      ...req.body,
+    });
     res.status(200).json({
       status: true,
       message: response,

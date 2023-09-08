@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 
-const StaffSchema = new mongoose.Schema({
+const AdminSchema = new mongoose.Schema({
     username: {
         type: mongoose.SchemaTypes.String,
         required: true,
@@ -17,12 +17,7 @@ const StaffSchema = new mongoose.Schema({
     password: {
         type: mongoose.SchemaTypes.String,
         required: true,
-    },
-    department: {
-        // @TODO: You can keep it as a string for now. In future, it's supposed to be a reference to a department.
-        type: mongoose.SchemaTypes.String,
-        required: true,
     }
 }, { timestamps: true })
 
-exports.StaffModel = mongoose.model('Staff', StaffSchema)
+exports.AdminModel = mongoose.model('Admin', AdminSchema)
