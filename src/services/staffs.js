@@ -4,6 +4,7 @@ const { AttendanceModel } = require('../db/models/attendance.model');
 const { comparePassword, hashPassword } = require('../utils/hashPassword');
 const { generateToken } = require('../utils/jwt-token');
 const { customAlphabet } = require('nanoid');
+const { sendEmail } = require('../utils/send-emails');
 
 exports.ping = function () {
   return 'Staff Service All Green!';
@@ -100,8 +101,6 @@ exports.createStaff = async function ({ email, username, name, department }) {
     10
   );
 
-  console.log("newPassword: ", newPassword)
-
   const newStaff = new StaffModel({
     username,
     email,
@@ -111,7 +110,12 @@ exports.createStaff = async function ({ email, username, name, department }) {
   });
 
   await newStaff.save();
-  // TODO: Send email to staff with password
+  
+  sendEmail({
+    to: email,
+    subject: 'Welcome to GNPC Attendance',
+    text: `Your staff account was created successfully!\n\nUse this credentials to access your account:\nEmail: ${email}\nPassword: ${newPassword}\n\n\nCheers!`,
+  })
 
   return {...newStaff._doc, password: undefined};
 };

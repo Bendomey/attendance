@@ -9,7 +9,6 @@ const AttendanceSchema = new mongoose.Schema({
     },
     project: {
         type: mongoose.SchemaTypes.ObjectId,
-        required: true,
         ref: 'Project'
     },
     clockInTime: {

@@ -18,7 +18,8 @@
     "fastest-validator": "1.17.0",
     "jsonwebtoken": "9.0.2",
     "mongoose": "7.3.4",
-    "nanoid": "3.3.4"
+    "nanoid": "3.3.4",
+    "nodemailer": "6.9.5"
   },
   "devDependencies": {
     "nodemon": "3.0.1"

@@ -3,6 +3,7 @@ const { AttendanceModel } = require('../db/models/attendance.model');
 const { ProjectModel } = require('../db/models/project.model');
 const { customAlphabet } = require('nanoid');
 const { CONFIG } = require('../../config');
+const { sendEmail } = require('../utils/send-emails');
 
 exports.ping = function () {
   return 'Attendance Service All Green!';
@@ -36,7 +37,6 @@ exports.clockIn = async function ({ username }) {
     CONFIG.VERFICATION_CODE.LENGTH
   );
 
-  console.log('Clockout Code: ', clockoutCode);
   const newAttendance = new AttendanceModel({
     staff: staff._id,
     clockInTime: Date.now(),
@@ -45,7 +45,11 @@ exports.clockIn = async function ({ username }) {
 
   await newAttendance.save();
 
-  // @TODO: Send clockout code to email
+  sendEmail({
+    to: staff.email,
+    subject: 'GNPC Attendance - Clock In',
+    text: `You just clocked in successfully! Use this code: ${clockoutCode} whenever you want to clock out! Have a great day today!\n\n\nCheers!`,
+  })
 
   return newAttendance;
 };
@@ -63,7 +67,7 @@ exports.clockOut = async function ({
   const attendance = await AttendanceModel.findOne({
     staff: id,
     clockoutTime: null,
-  });
+  }).populate('staff');
 
   if (!attendance) {
     // This should never happen of course.
@@ -90,6 +94,11 @@ exports.clockOut = async function ({
 
   await attendance.save();
 
+  sendEmail({
+    to: attendance.staff.email,
+    subject: 'GNPC Attendance - Clocked Out',
+    text: `You just clocked out successfully! See you tomorrow.\n\n\nCheers!`,
+  })
   return true;
 };
 
